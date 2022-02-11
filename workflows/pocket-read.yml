@@ -1,0 +1,34 @@
+on:
+  rss:
+    url: https://getpocket.com/users/${{ secrets.POCKET_USERNAME }}/feed/read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache install Nix packages
+        uses: rikhuijzer/cache-install@v1.0.8
+        with:
+          key: nix-${{ hashFiles('**.nix', 'flake.lock') }}
+          nix_file: "default.nix"
+
+      - name: Print Outputs
+        env:
+          title: ${{on.rss.outputs.title}}
+          contentSnippet: ${{on.rss.outputs.contentSnippet}}
+          link: ${{on.rss.outputs.link}}
+          POCKET_USERNAME: ${{ secrets.POCKET_USERNAME }}
+          WALLABAG_URL: "${{ secrets.WALLABAG_URL }}"
+          WALLABAG_CLIENT_ID: "${{ secrets.WALLABAG_CLIENT_ID }}"
+          WALLABAG_CLIENT_SECRET: "${{ secrets.WALLABAG_CLIENT_SECRET }}"
+          WALLABAG_USERNAME: ${{ secrets.WALLABAG_USERNAME }}"
+          WALLABAG_PASSWORD: "${{ secrets.WALLABAG_PASSWORD }}"
+        run: |
+          set -xeuo pipefail
+          echo title: $title
+          echo contentSnippet: $contentSnippet
+          echo link: $link
+          wallabag-saver -a -- "$link"
