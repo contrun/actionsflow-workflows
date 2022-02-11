@@ -1,0 +1,53 @@
+on:
+  # Just always run it. Our customized logic lies in the script below.
+  script:
+    run: |
+      const t = new Date().toLocaleString()
+      const s = "pocket-to-wallabag: " + t
+      return [{"id": s}]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install nix
+        uses: cachix/install-nix-action@v16
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org/ https://contrun.cachix.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= contrun.cachix.org-1:je0xqCRowN4w8BPKw3dOQvKxaINmfnJjVnzwfLYIiKQ=
+
+      - name: Save to wallabag
+        env:
+          POCKET_USERNAME: "${{ secrets.POCKET_USERNAME }}"
+          WALLABAG_URL: "${{ secrets.WALLABAG_URL }}"
+          WALLABAG_CLIENT_ID: "${{ secrets.WALLABAG_CLIENT_ID }}"
+          WALLABAG_CLIENT_SECRET: "${{ secrets.WALLABAG_CLIENT_SECRET }}"
+          WALLABAG_USERNAME: "${{ secrets.WALLABAG_USERNAME }}"
+          WALLABAG_PASSWORD: "${{ secrets.WALLABAG_PASSWORD }}"
+        run: |
+          set -euo pipefail
+          nix profile install 'github:contrun/infra#wallabag-saver' 'nixpkgs#sfeed' 'nixpkgs#gawk' 'nixpkgs#parallel' 'nixpkgs#curl'
+
+          get_links() {
+              curl -sS "$1" | sfeed | awk -F'\t' '{print $3}' 
+          }
+
+          # This may frequently fail. We ignore the errors here.
+          try_save() {
+              urls="$(cat)"
+              if ! parallel --will-cite --retries 2 --delay 10s -v -r -j 5 -N 40 wallabag-saver "$@" <<< "$urls"; then
+                  >&2 echo "$urls"
+                  >&2 echo "Failed to save pocket articles to wallabag"
+              fi
+          }
+
+          get_links "https://getpocket.com/users/$POCKET_USERNAME/feed/read" | try_save -a -- &
+          get_links "https://getpocket.com/users/$POCKET_USERNAME/feed/unread" | try_save -- &
+          wait
