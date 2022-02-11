@@ -9,13 +9,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Cache install Nix packages
-        uses: contrun/cache-install@b8172fe79d7c678409491bd079d24bcfd057a624
+      - name: Install nix
+        uses: cachix/install-nix-action@v16
         with:
-          key: nix-${{ hashFiles('**.nix', 'flake.lock') }}
-          nix_file: "default.nix"
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            substituters = https://cache.nixos.org/ https://contrun.cachix.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= contrun.cachix.org-1:je0xqCRowN4w8BPKw3dOQvKxaINmfnJjVnzwfLYIiKQ=
 
-      - name: Print Outputs
+      - name: Save to wallabag
         env:
           title: ${{on.rss.outputs.title}}
           contentSnippet: ${{on.rss.outputs.contentSnippet}}
@@ -28,7 +32,9 @@ jobs:
           WALLABAG_PASSWORD: "${{ secrets.WALLABAG_PASSWORD }}"
         run: |
           set -xeuo pipefail
-          echo title: $title
-          echo contentSnippet: $contentSnippet
-          echo link: $link
-          wallabag-saver -a -- "$link"
+          if ! nix run 'github:contrun/infra#wallabag-saver' -- -a -- "$link"; then
+              >&2 echo "failed to save article"
+              >&2 echo "title: $title"
+              >&2 echo "contentSnippet: $contentSnippet"
+              >&2 echo "link: $link"
+          fi
