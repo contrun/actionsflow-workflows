@@ -5,6 +5,8 @@ on:
       const t = new Date().toLocaleString()
       const s = "pocket-to-wallabag: " + t
       return [{"id": s}]
+    config:
+      every: "15 3 * * *"
 
 jobs:
   build:
