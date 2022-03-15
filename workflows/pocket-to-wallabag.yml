@@ -18,6 +18,7 @@ jobs:
       - name: Install nix
         uses: cachix/install-nix-action@v16
         with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.7.0pre20220203_bd383d1/install
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
@@ -27,7 +28,6 @@ jobs:
 
       - name: Save to wallabag
         env:
-          POCKET_USERNAME: "${{ secrets.POCKET_USERNAME }}"
           WALLABAG_URL: "${{ secrets.WALLABAG_URL }}"
           WALLABAG_CLIENT_ID: "${{ secrets.WALLABAG_CLIENT_ID }}"
           WALLABAG_CLIENT_SECRET: "${{ secrets.WALLABAG_CLIENT_SECRET }}"
@@ -35,10 +35,22 @@ jobs:
           WALLABAG_PASSWORD: "${{ secrets.WALLABAG_PASSWORD }}"
         run: |
           set -euo pipefail
-          nix profile install 'github:contrun/infra#wallabag-saver' 'nixpkgs#sfeed' 'nixpkgs#gawk' 'nixpkgs#parallel' 'nixpkgs#curl'
 
-          get_links() {
-              curl -sS "$1" | sfeed | awk -F'\t' '{print $3}' 
+          nix profile install 'github:contrun/infra#wallabag-saver' 'nixpkgs#parallel' 'nixpkgs#python3' 'nixpkgs#git' 'nixpkgs#jq'
+
+          pockexport_dir=/tmp/pockexport
+          export_pocket_articles() {
+              if ! [[ -d "$pockexport_dir" ]]; then
+                  git clone --recursive https://github.com/karlicoss/pockexport.git "$pockexport_dir"
+              fi
+
+              pushd "$pockexport_dir"
+              python -m venv .venv
+              source .venv/bin/activate
+              pip3 install --editable .
+              popd
+              python3 -m pockexport.export --consumer_key "${{ secrets.POCKET_CONSUMER_KEY }}" --access_token "${{ secrets.POCKET_ACCESS_TOKEN }}" | tee "$1"
+              deactivate
           }
 
           # This may frequently fail. We ignore the errors here.
@@ -50,6 +62,11 @@ jobs:
               fi
           }
 
-          get_links "https://getpocket.com/users/$POCKET_USERNAME/feed/read" | try_save -a -- &
-          get_links "https://getpocket.com/users/$POCKET_USERNAME/feed/unread" | try_save -- &
+          export_pocket_articles pocket.json
+
+          # https://getpocket.com/developer/docs/v3/retrieve
+          # status - 0, 1, 2 - 1 if the item is archived - 2 if the item should be deleted
+          # TODO: delete articles
+          jq -r '.list[] | select( .status == "0") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -- &
+          jq -r '.list[] | select( .status == "1") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -a -- &
           wait
