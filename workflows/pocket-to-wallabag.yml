@@ -36,7 +36,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          nix profile install 'github:contrun/infra#wallabag-saver' 'nixpkgs#parallel' 'nixpkgs#python3' 'nixpkgs#git' 'nixpkgs#jq'
+          nix profile install 'github:contrun/wallabag-saver' 'nixpkgs#parallel' 'nixpkgs#python3' 'nixpkgs#git' 'nixpkgs#jq'
 
           pockexport_dir=/tmp/pockexport
           export_pocket_articles() {
