@@ -66,7 +66,7 @@ jobs:
 
           # https://getpocket.com/developer/docs/v3/retrieve
           # status - 0, 1, 2 - 1 if the item is archived - 2 if the item should be deleted
-          # TODO: delete articles
-          jq -r '.list[] | select( .status == "0") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -- &
-          jq -r '.list[] | select( .status == "1") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -a -- &
+          jq -r '.list[] | select( .status == "0") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -m create -- &
+          jq -r '.list[] | select( .status == "1") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -m archive -- &
+          jq -r '.list[] | select( .status == "2") | if has("resolved_url") then .resolved_url else .given_url end' < pocket.json | try_save -m delete -- &
           wait
