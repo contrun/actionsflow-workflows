@@ -311,11 +311,11 @@
     "flake-compat": {
       "flake": false,
       "locked": {
-        "lastModified": 1648199409,
-        "narHash": "sha256-JwPKdC2PoVBkG6E+eWw3j6BMR6sL3COpYWfif7RVb8Y=",
+        "lastModified": 1650374568,
+        "narHash": "sha256-Z+s0J8/r907g149rllvwhb4pKi8Wam5ij0st8PwAh+E=",
         "owner": "edolstra",
         "repo": "flake-compat",
-        "rev": "64a525ee38886ab9028e6f61790de0832aa3ef03",
+        "rev": "b4a34015c698c7793d592d66adbab377907a2be8",
         "type": "github"
       },
       "original": {
@@ -559,11 +559,11 @@
         "wallabag-client": "wallabag-client"
       },
       "locked": {
-        "lastModified": 1649565018,
-        "narHash": "sha256-RG8mL9BG3HYiUdE63+dRipxAadPQJP/kUkOOoZ7Axcc=",
+        "lastModified": 1650735330,
+        "narHash": "sha256-MKJdyJoAz/4e8iDZ6nY8LcRLhXD/FWNM9rU7yifkWx0=",
         "owner": "contrun",
         "repo": "infra",
-        "rev": "91b0d2c72fe7e18713f691b3c6b519751a61812b",
+        "rev": "1a6a5bb65f8547759da14a3137e9f6cc04ffc4f1",
         "type": "github"
       },
       "original": {
