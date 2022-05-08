@@ -559,11 +559,11 @@
         "wallabag-client": "wallabag-client"
       },
       "locked": {
-        "lastModified": 1651369150,
-        "narHash": "sha256-BYzfEqSLzcmfFh4tM+bpU61nj+6ThAzjr++FQo5u4aI=",
+        "lastModified": 1651834678,
+        "narHash": "sha256-UEf0nFCPeEouZEoqrSkOyGBEaNMg58CKOwduGuIwECM=",
         "owner": "contrun",
         "repo": "infra",
-        "rev": "bdbe843ab5ba092a74371c8ca79c33d0cfd558f3",
+        "rev": "d7ed20c1aaa8b7ed8ab4703aa6c3789a28c4f3ad",
         "type": "github"
       },
       "original": {
